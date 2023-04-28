@@ -1,5 +1,6 @@
 ﻿using Dapper;
 using Microsoft.Data.Sqlite;
+using System.ComponentModel;
 
 namespace StarRailTool;
 
@@ -66,6 +67,104 @@ public class DatabaseService
 
 
 
+
+    private class KVT
+    {
+        public KVT(string key, string value, DateTime time)
+        {
+            Key = key;
+            Value = value;
+            Time = time;
+        }
+
+        public string Key { get; set; }
+
+        public string Value { get; set; }
+
+        public DateTime Time { get; set; }
+    }
+
+
+
+
+
+    public T? GetValue<T>(string key, out DateTime time, T? defaultValue = default)
+    {
+        time = DateTime.MinValue;
+        try
+        {
+            using var con = CreateConnection();
+            var kvt = con.QueryFirstOrDefault<KVT>("SELECT * FROM KVT WHERE Key = @key LIMIT 1;", new { key });
+            if (kvt != null)
+            {
+                time = kvt.Time;
+                var converter = TypeDescriptor.GetConverter(typeof(T));
+                if (converter == null)
+                {
+                    return defaultValue;
+                }
+                return (T?)converter.ConvertFromString(kvt.Value);
+            }
+            else
+            {
+                return defaultValue;
+            }
+        }
+        catch
+        {
+            return defaultValue;
+        }
+    }
+
+
+
+    public bool TryGetValue<T>(string key, out T? result, out DateTime time, T? defaultValue = default)
+    {
+        result = defaultValue;
+        time = DateTime.MinValue;
+        try
+        {
+            using var con = CreateConnection();
+            var kvt = con.QueryFirstOrDefault<KVT>("SELECT * FROM KVT WHERE Key = @key LIMIT 1;", new { key });
+            if (kvt != null)
+            {
+                time = kvt.Time;
+                var converter = TypeDescriptor.GetConverter(typeof(T));
+                if (converter == null)
+                {
+                    return false;
+                }
+                result = (T?)converter.ConvertFromString(kvt.Value);
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+
+
+    public void SetValue<T>(string key, T value, DateTime? time = null)
+    {
+        try
+        {
+            using var con = CreateConnection();
+            con.Execute("INSERT OR REPLACE INTO KVT (Key, Value, Time) VALUES (@Key, @Value, @Time);", new KVT(key, value?.ToString() ?? "", time ?? DateTime.Now));
+
+        }
+        catch { }
+    }
+
+
+
+
+
     private static List<string> StructureSqls = new() { Structure_v1 };
 
 
@@ -96,6 +195,13 @@ public class DatabaseService
             Uid      INTEGER NOT NULL PRIMARY KEY,
             GachaUrl TEXT    NOT NULL,
             Time     TEXT    NOT NULL
+        );
+
+        CREATE TABLE IF NOT EXISTS KVT
+        (
+            Key   TEXT NOT NULL PRIMARY KEY,
+            Value TEXT NOT NULL,
+            Time  TEXT NOT NULL
         );
 
         PRAGMA USER_VERSION =1;

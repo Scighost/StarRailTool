@@ -4,6 +4,7 @@ using System.CommandLine;
 
 AppConfig.Instance = AppConfig.Load(Path.Combine(AppContext.BaseDirectory, "Config.json"));
 
+bool checkUpdate = true;
 
 
 var root = new RootCommand();
@@ -64,6 +65,36 @@ var root = new RootCommand();
 
 
 
+
+
+
+
+#region update
+{
+
+    var update = new Command("update", "检查更新");
+    update.SetHandler(async () => { checkUpdate = false; await GithubService.CheckUpdateAsync(true); });
+    root.AddCommand(update);
+
+}
+#endregion
+
 root.Invoke(args);
 
+
+
+await root.InvokeAsync(args);
+
+
 AppConfig.Instance.Save(Path.Combine(AppContext.BaseDirectory, "Config.json"));
+
+
+#if !DEBUG
+
+if (checkUpdate)
+{
+    await GithubService.CheckUpdateAsync();
+}
+
+#endif
+
