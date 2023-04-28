@@ -1,5 +1,4 @@
-﻿using System.Diagnostics;
-using System.Text.Json;
+﻿using System.Text.Json;
 using System.Text.Json.Serialization;
 
 namespace StarRailTool;
@@ -51,34 +50,34 @@ internal abstract class GithubService
 
 
 
-    public static async Task CheckUpdateAsync(bool disableCache = false)
+    public static async Task CheckUpdateAsync(bool manual = false)
     {
+        if (!manual)
+        {
+            _httpClient.Timeout = TimeSpan.FromSeconds(1);
+        }
         try
         {
-            var release = await GetLatestReleaseAsync(disableCache, disableCache);
+            var release = await GetLatestReleaseAsync(disableCache: manual, throwException: manual);
             if (release != null)
             {
                 if (Version.TryParse(release.TagName, out var newVersion))
                 {
-                    var file = Process.GetCurrentProcess().MainModule?.FileName;
-                    if (File.Exists(file))
+                    if (Version.TryParse(AppConfig.AppVersion, out var oldVeriosn))
                     {
-                        if (Version.TryParse(FileVersionInfo.GetVersionInfo(file).FileVersion, out var oldVeriosn))
+                        if (newVersion > oldVeriosn)
                         {
-                            if (newVersion > oldVeriosn)
-                            {
-                                Console.ForegroundColor = ConsoleColor.DarkGreen;
-                                Console.WriteLine($"有新版本:{release.Name}");
-                                Console.WriteLine(release.HtmlUrl);
-                                Console.ForegroundColor = ConsoleColor.White;
-                            }
-                            return;
+                            Console.ForegroundColor = ConsoleColor.DarkGreen;
+                            Console.WriteLine($"有新版本 v{release.TagName}:{release.Name}");
+                            Console.WriteLine(release.HtmlUrl);
+                            Console.ForegroundColor = ConsoleColor.White;
                         }
+                        return;
                     }
                 }
                 throw new ArgumentException("检查更新失败");
             }
-            if (disableCache)
+            if (manual)
             {
                 Console.ForegroundColor = ConsoleColor.DarkGreen;
                 Console.WriteLine($"已是最新版本");
@@ -87,7 +86,7 @@ internal abstract class GithubService
         }
         catch (Exception ex)
         {
-            if (disableCache)
+            if (manual)
             {
                 Logger.Error(ex.Message);
             }

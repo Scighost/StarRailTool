@@ -1,4 +1,6 @@
-﻿using System.Text.Json;
+﻿using System.Diagnostics;
+using System.Text.Encodings.Web;
+using System.Text.Json;
 using System.Text.Json.Serialization;
 
 namespace StarRailTool;
@@ -10,8 +12,25 @@ internal class AppConfig
     [JsonIgnore]
     public static AppConfig Instance { get; set; }
 
+    [JsonIgnore]
+    public static readonly JsonSerializerOptions JsonSerializerOptions = new JsonSerializerOptions { WriteIndented = true, Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping };
 
-    private static readonly JsonSerializerOptions jsonSerializerOptions = new JsonSerializerOptions { WriteIndented = true, Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping };
+    [JsonIgnore]
+    public static string? AppVersion { get; private set; }
+
+
+    static AppConfig()
+    {
+        try
+        {
+            var file = Process.GetCurrentProcess().MainModule?.FileName;
+            if (File.Exists(file))
+            {
+                AppVersion = FileVersionInfo.GetVersionInfo(file).FileVersion;
+            }
+        }
+        catch { }
+    }
 
 
 
@@ -25,6 +44,10 @@ internal class AppConfig
 
 
     public int BackupIntervalInDays { get; set; } = 21;
+
+
+    public bool AutoCheckUpdate { get; set; } = true;
+
 
 
     [JsonExtensionData]
@@ -57,7 +80,7 @@ internal class AppConfig
     {
         try
         {
-            var str = JsonSerializer.Serialize(this, jsonSerializerOptions);
+            var str = JsonSerializer.Serialize(this, JsonSerializerOptions);
             File.WriteAllText(path, str);
         }
         catch (Exception ex)

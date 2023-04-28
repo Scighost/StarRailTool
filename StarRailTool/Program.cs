@@ -117,7 +117,7 @@ AppConfig.Instance.Save(Path.Combine(AppContext.BaseDirectory, "Config.json"));
 
 #if !DEBUG
 
-if (checkUpdate)
+if (checkUpdate && AppConfig.Instance.AutoCheckUpdate)
 {
     await GithubService.CheckUpdateAsync();
 }
