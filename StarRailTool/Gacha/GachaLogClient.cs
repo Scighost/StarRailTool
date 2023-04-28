@@ -102,7 +102,7 @@ public class GachaLogClient
 
     private async Task<List<GachaLogItem>> GetGachaLogInternelAsync(string prefix, GachaType gachaType, long endId = 0, IProgress<(GachaType GachaType, int Page)>? progress = null)
     {
-        var param = new GachaLogQueryParam(gachaType, 1, 20, endId);
+        var param = new GachaLogQueryParam(gachaType, 1, 20, 0);
         var result = new List<GachaLogItem>();
         while (true)
         {
@@ -130,7 +130,7 @@ public class GachaLogClient
     {
         await Task.Delay(Random.Shared.Next(200, 300));
         var url = $"{gachaUrlPrefix}&{param}";
-        var wrapper = await _httpClient.GetFromJsonAsync(url, typeof(MihoyoApiWrapper<GachaLogResult>), GachaJsonContext.Default) as MihoyoApiWrapper<GachaLogResult>;
+        var wrapper = await _httpClient.GetFromJsonAsync(url, typeof(MihoyoApiWrapper<GachaLogResult>), GachaJsonContext.Config) as MihoyoApiWrapper<GachaLogResult>;
         if (wrapper is null)
         {
             return new List<GachaLogItem>();

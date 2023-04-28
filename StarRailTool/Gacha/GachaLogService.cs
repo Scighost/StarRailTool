@@ -1,5 +1,10 @@
 ﻿using ConsoleTableExt;
 using Dapper;
+using MiniExcelLibs;
+using MiniExcelLibs.OpenXml;
+using System.Data;
+using System.Security.AccessControl;
+using System.Text.Json;
 
 namespace StarRailTool.Gacha;
 
@@ -46,7 +51,7 @@ internal class GachaLogService
 
 
 
-    public async Task GetGachaLogAsync(string url, int uid, string server, bool all)
+    public async Task GetGachaLogAsync(string url, int uid, string server, bool all, string lang)
     {
         try
         {
@@ -62,7 +67,7 @@ internal class GachaLogService
                         Logger.Warn($"没有找到与 uid {uid} 对应的抽卡记录网址");
                         return;
                     }
-                    Logger.Info($"Uid {uid} 的抽卡记录网址更新于 {urlItem.Time:yyyy-MM-dd HH:mm:ss}，正在验证有效性。。。");
+                    Logger.Info($"Uid {uid} 的抽卡记录网址保存时间 {urlItem.Time:yyyy-MM-dd HH:mm:ss}，正在验证有效性。。。");
                     url = urlItem.GachaUrl;
                 }
                 else
@@ -108,6 +113,10 @@ internal class GachaLogService
                     }
                 }
             }
+            if (!string.IsNullOrWhiteSpace(lang))
+            {
+                _client.Language = lang;
+            }
             var newUid = await _client.GetUidByGachaUrlAsync(url);
             if (newUid == 0)
             {
@@ -135,7 +144,7 @@ internal class GachaLogService
                 var newCount = con.QueryFirstOrDefault<int>("SELECT COUNT(*) FROM GachaLogItem WHERE Uid = @Uid;", new { Uid = newUid });
                 Logger.Success($"Uid {newUid} 获取抽卡记录 {list.Count} 条，新增 {newCount - oldCount} 条");
 
-                var rows = new List<List<object>> { new List<object> { "Uid", "总数", "群星跃迁", "始发跃迁", "角色跃迁", "光锥跃迁", "更新于" }, GetStatsSummary(newUid) };
+                var rows = new List<List<object>> { new List<object> { "Uid", "总数", "群星跃迁", "始发跃迁", "角色跃迁", "光锥跃迁", "上次更新时间" }, GetStatsSummary(newUid) };
                 ConsoleTableBuilder.From(rows).WithCharMapDefinition(FramePipDefinition).ExportAndWriteLine();
             }
         }
@@ -216,7 +225,7 @@ internal class GachaLogService
     {
         using var con = DatabaseService.Instance.CreateConnection();
         var uids = con.Query<int>("SELECT DISTINCT Uid FROM GachaLogItem;").ToList();
-        var rows = new List<List<object>> { new List<object> { "Uid", "总数", "群星跃迁", "始发跃迁", "角色跃迁", "光锥跃迁", "更新于" } };
+        var rows = new List<List<object>> { new List<object> { "Uid", "总数", "群星跃迁", "始发跃迁", "角色跃迁", "光锥跃迁", "上次更新时间" } };
         foreach (var u in uids)
         {
             rows.Add(GetStatsSummary(u));
@@ -250,7 +259,7 @@ internal class GachaLogService
 
 
 
-    public void ListGachaLog(int uid, int t, int rank, bool asc)
+    public void ListGachaLog(int uid, int t, int rank, bool desc)
     {
         try
         {
@@ -263,15 +272,25 @@ internal class GachaLogService
                     rank = Math.Clamp(rank, 3, 5);
                     if (Enum.IsDefined((GachaType)t))
                     {
-                        var list = con.Query<GachaLogItem>("SELECT * FROM GachaLogItem WHERE Uid = @uid AND GachaType = @t AND RankType >= @rank ORDER BY Id DESC;", new { uid, t, rank });
-                        if (asc)
+                        var list = con.Query<GachaLogItemEx>("SELECT * FROM GachaLogItem WHERE Uid = @uid AND GachaType = @t ORDER BY Id;", new { uid, t }).ToList();
+                        int index = 0;
+                        for (int i = 0; i < list.Count; i++)
                         {
-                            list = list.OrderBy(x => x.Id).ToList();
+                            list[i].Index = ++index;
+                            if (list[i].RankType == 5)
+                            {
+                                index = 0;
+                            }
                         }
+                        if (desc)
+                        {
+                            list = list.OrderByDescending(x => x.Id).ToList();
+                        }
+                        list = list.Where(x => x.RankType >= rank).ToList();
                         if (list.Any())
                         {
-                            var rows = new List<List<object>> { new List<object> { "跃迁类型", "Id", "时间", "名称", "稀有度" } };
-                            rows.AddRange(list.Select(x => new List<object> { x.GachaType.ToDescription(), x.Id, x.Time.ToString("yyyy-MM-dd HH:mm:ss"), x.Name, GetRarityStar(x.RankType) }));
+                            var rows = new List<List<object>> { new List<object> { "跃迁类型", "Id", "时间", "名称", "保底内排序", "稀有度" } };
+                            rows.AddRange(list.Select(x => new List<object> { x.GachaType.ToDescription(), x.Id, x.Time.ToString("yyyy-MM-dd HH:mm:ss"), x.Name, x.Index, GetRarityStar(x.RankType) }));
                             ConsoleTableBuilder.From(rows).WithCharMapDefinition(FramePipDefinition).ExportAndWriteLine();
                         }
                         else
@@ -281,18 +300,28 @@ internal class GachaLogService
                     }
                     else
                     {
-                        var rows = new List<List<object>> { new List<object> { "跃迁类型", "Id", "时间", "名称", "稀有度" } };
+                        var rows = new List<List<object>> { new List<object> { "跃迁类型", "Id", "时间", "名称", "保底内排序", "稀有度" } };
                         foreach (int type in new[] { 1, 2, 11, 12 })
                         {
-                            var obj = new { uid, type, rank };
-                            var list = con.Query<GachaLogItem>("SELECT * FROM GachaLogItem WHERE Uid = @uid AND GachaType = @type AND RankType >= @rank ORDER BY Id DESC;", obj);
-                            if (asc)
+                            var obj = new { uid, type };
+                            var list = con.Query<GachaLogItemEx>("SELECT * FROM GachaLogItem WHERE Uid = @uid AND GachaType = @type ORDER BY Id;", obj).ToList();
+                            int index = 0;
+                            for (int i = 0; i < list.Count; i++)
+                            {
+                                list[i].Index = ++index;
+                                if (list[i].RankType == 5)
+                                {
+                                    index = 0;
+                                }
+                            }
+                            if (desc)
                             {
                                 list = list.OrderBy(x => x.Id).ToList();
                             }
+                            list = list.Where(x => x.RankType >= rank).ToList();
                             if (list.Any())
                             {
-                                rows.AddRange(list.Select(x => new List<object> { x.GachaType.ToDescription(), x.Id, x.Time.ToString("yyyy-MM-dd HH:mm:ss"), x.Name, GetRarityStar(x.RankType) }));
+                                rows.AddRange(list.Select(x => new List<object> { x.GachaType.ToDescription(), x.Id, x.Time.ToString("yyyy-MM-dd HH:mm:ss"), x.Name, x.Index, GetRarityStar(x.RankType) }));
                             }
                         }
                         ConsoleTableBuilder.From(rows).WithCharMapDefinition(FramePipDefinition).ExportAndWriteLine();
@@ -334,6 +363,190 @@ internal class GachaLogService
 
 
 
+
+    public void ExportGachaLog(int uid, bool all, string output, string format)
+    {
+        try
+        {
+            var time = DateTime.Now;
+            if (Path.GetExtension(output) == ".json")
+            {
+                format = "json";
+            }
+            if (Path.GetExtension(output) == ".xlsx")
+            {
+                format = "excel";
+            }
+            using var con = DatabaseService.Instance.CreateConnection();
+            if (all)
+            {
+                var uids = con.Query<int>("SELECT DISTINCT Uid FROM GachaLogItem;").ToList();
+                if (uids.Count == 0)
+                {
+                    Logger.Warn("没有任何抽卡数据", true);
+                }
+                else
+                {
+                    if (string.IsNullOrWhiteSpace(output))
+                    {
+                        output = Path.Combine(AppContext.BaseDirectory, "Export");
+                    }
+                    output = Path.GetFullPath(output);
+                    Directory.CreateDirectory(output);
+                    foreach (var u in uids)
+                    {
+                        string file = "";
+                        if (format is "excel")
+                        {
+                            file = Path.Combine(output, $"export_gacha_{u}_{time:yyyyMMddHHmmss}.xlsx");
+                            ExportAsExcel(u, file);
+                        }
+                        else
+                        {
+                            file = Path.Combine(output, $"export_gacha_{u}_{time:yyyyMMddHHmmss}.json");
+                            ExportAsJson(u, file);
+                        }
+                        Logger.Success($"已导出 uid {u}: {file}");
+                    }
+                }
+            }
+            else
+            {
+                var list = con.Query<GachaLogItem>("SELECT * FROM GachaLogItem WHERE Uid = @uid;", new { uid }).ToList();
+                if (list.Count == 0)
+                {
+                    Logger.Warn($"Uid {uid} 没有任何抽卡数据", true);
+                }
+                else
+                {
+                    string dir = "./";
+                    if (string.IsNullOrWhiteSpace(output))
+                    {
+                        output = null!;
+                        dir = Path.Combine(AppContext.BaseDirectory, "Export");
+                    }
+                    else
+                    {
+                        output = Path.GetFullPath(output);
+                        dir = Path.GetDirectoryName(output)!;
+                    }
+                    Directory.CreateDirectory(dir);
+
+                    string file = "";
+                    if (format is "excel")
+                    {
+                        file = output ?? Path.Combine(dir, $"export_gacha_{uid}_{time:yyyyMMddHHmmss}.xlsx");
+                        ExportAsExcel(uid, file);
+                    }
+                    else
+                    {
+                        file = output ?? Path.Combine(dir, $"export_gacha_{uid}_{time:yyyyMMddHHmmss}.json");
+                        ExportAsJson(uid, file);
+                    }
+                    Logger.Success($"已导出 uid {uid}: {file}", true);
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.Error(ex.Message);
+        }
+    }
+
+
+
+
+
+
+    private void ExportAsJson(int uid, string output)
+    {
+        using var con = DatabaseService.Instance.CreateConnection();
+        var list = con.Query<GachaLogItem>("SELECT * FROM GachaLogItem WHERE Uid = @uid ORDER BY Id;", new { uid }).ToList();
+        var obj = new GachaLogExportFile(uid, list);
+        var str = JsonSerializer.Serialize(obj, typeof(GachaLogExportFile), GachaJsonContext.Config);
+        File.WriteAllText(output, str);
+    }
+
+
+
+    private void ExportAsExcel(int uid, string output)
+    {
+        using var con = DatabaseService.Instance.CreateConnection();
+        var list = con.Query<GachaLogItem>("SELECT * FROM GachaLogItem WHERE Uid = @uid ORDER BY Id;", new { uid }).ToList();
+
+        var sheets = new DataSet();
+        var table1 = new DataTable("原始数据");
+        table1.Columns.Add("uid", typeof(string));
+        table1.Columns.Add("id", typeof(string));
+        table1.Columns.Add("time", typeof(string));
+        table1.Columns.Add("name", typeof(string));
+        table1.Columns.Add("item_type", typeof(string));
+        table1.Columns.Add("rank_type", typeof(string));
+        table1.Columns.Add("gacha_type", typeof(string));
+        table1.Columns.Add("gacha_id", typeof(string));
+        table1.Columns.Add("item_id", typeof(string));
+        table1.Columns.Add("lang", typeof(string));
+        table1.Columns.Add("count", typeof(string));
+        foreach (var item in list)
+        {
+            table1.Rows.Add(item.Uid.ToString(),
+                            item.Id.ToString(),
+                            item.Time.ToString("yyyy-MM-dd HH:mm:ss"),
+                            item.Name,
+                            item.ItemType,
+                            item.RankType.ToString(),
+                            ((int)item.GachaType).ToString(),
+                            item.GachaId.ToString(),
+                            item.ItemId.ToString(),
+                            item.Lang,
+                            item.Count.ToString());
+        }
+        sheets.Tables.Add(table1);
+
+        foreach (var type in new int[] { 1, 2, 11, 12 })
+        {
+            var table = new DataTable(((GachaType)type).ToDescription());
+            table.Columns.Add("Uid", typeof(string));
+            table.Columns.Add("Id", typeof(string));
+            table.Columns.Add("时间", typeof(string));
+            table.Columns.Add("名称", typeof(string));
+            table.Columns.Add("物品类型", typeof(string));
+            table.Columns.Add("稀有度", typeof(string));
+            table.Columns.Add("跃迁类型", typeof(string));
+            table.Columns.Add("保底内排序", typeof(string));
+            var l = list.Where(x => x.GachaType == (GachaType)type).ToList();
+            int index = 0;
+            foreach (var item in l)
+            {
+                index++;
+                table.Rows.Add(item.Uid.ToString(),
+                            item.Id.ToString(),
+                            item.Time.ToString("yyyy-MM-dd HH:mm:ss"),
+                            item.Name,
+                            item.ItemType,
+                            item.RankType.ToString(),
+                            ((int)item.GachaType).ToString(),
+                            index.ToString());
+                if (item.RankType == 5)
+                {
+                    index = 0;
+                }
+            }
+            sheets.Tables.Add(table);
+        }
+
+        MiniExcel.SaveAs(output, sheets, configuration: new OpenXmlConfiguration { TableStyles = TableStyles.None, });
+    }
+
+
+
+
+
+
+    private class GachaLogItemEx : GachaLogItem
+    {
+        public int Index { get; set; }
+    }
 
 
 
