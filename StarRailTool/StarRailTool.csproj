@@ -13,6 +13,7 @@
 		<RuntimeIdentifier>win10-x64</RuntimeIdentifier>
 		<DebugType>embedded</DebugType>
 		<PublishTrimmed>true</PublishTrimmed>
+		<TrimMode>partial</TrimMode>
 		<PublishSingleFile>true</PublishSingleFile>
 		<IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
 	</PropertyGroup>

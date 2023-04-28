@@ -5,7 +5,6 @@ using System.Text.Json.Serialization;
 namespace StarRailTool.Gacha;
 
 [JsonSerializable(typeof(MihoyoApiWrapper<GachaLogResult>))]
-[JsonSerializable(typeof(GachaLogItem[]))]
 [JsonSerializable(typeof(GachaLogItem))]
 [JsonSerializable(typeof(GachaLogExportFile))]
 [JsonSerializable(typeof(GachaLogExportFile.GachaLogExportInfo))]
