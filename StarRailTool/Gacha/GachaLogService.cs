@@ -3,7 +3,6 @@ using Dapper;
 using MiniExcelLibs;
 using MiniExcelLibs.OpenXml;
 using System.Data;
-using System.Security.AccessControl;
 using System.Text.Json;
 
 namespace StarRailTool.Gacha;
@@ -463,7 +462,7 @@ internal class GachaLogService
         using var con = DatabaseService.Instance.CreateConnection();
         var list = con.Query<GachaLogItem>("SELECT * FROM GachaLogItem WHERE Uid = @uid ORDER BY Id;", new { uid }).ToList();
         var obj = new GachaLogExportFile(uid, list);
-        var str = JsonSerializer.Serialize(obj, typeof(GachaLogExportFile), GachaJsonContext.Config);
+        var str = JsonSerializer.Serialize(obj, AppConfig.JsonSerializerOptions);
         File.WriteAllText(output, str);
     }
 

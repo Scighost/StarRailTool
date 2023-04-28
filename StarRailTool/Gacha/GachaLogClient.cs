@@ -130,7 +130,7 @@ public class GachaLogClient
     {
         await Task.Delay(Random.Shared.Next(200, 300));
         var url = $"{gachaUrlPrefix}&{param}";
-        var wrapper = await _httpClient.GetFromJsonAsync(url, typeof(MihoyoApiWrapper<GachaLogResult>), GachaJsonContext.Config) as MihoyoApiWrapper<GachaLogResult>;
+        var wrapper = await _httpClient.GetFromJsonAsync<MihoyoApiWrapper<GachaLogResult>>(url);
         if (wrapper is null)
         {
             return new List<GachaLogItem>();
