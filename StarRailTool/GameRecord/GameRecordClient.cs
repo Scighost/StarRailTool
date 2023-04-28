@@ -1,6 +1,8 @@
 ﻿using StarRailTool.GameRecord.Ledger;
 using System.Net;
+#if !DEBUG
 using System.Net.Http.Json;
+#endif
 using System.Text.Json;
 
 namespace StarRailTool.GameRecord;

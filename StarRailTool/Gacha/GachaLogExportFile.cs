@@ -35,6 +35,9 @@ internal class GachaLogExportFile
         [JsonPropertyName("export_app")]
         public string ExportApp { get; set; } = "StarRailTool";
 
+        [JsonPropertyName("export_app_version")]
+        public string ExportAppVersion { get; set; } = AppConfig.AppVersion ?? "";
+
         [JsonPropertyName("count")]
         public string Count { get; set; }
     }

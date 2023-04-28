@@ -4,10 +4,14 @@ using System.CommandLine;
 
 AppConfig.Instance = AppConfig.Load(Path.Combine(AppContext.BaseDirectory, "Config.json"));
 
+
 bool checkUpdate = true;
 
-
-var root = new RootCommand();
+var root = new RootCommand($"""
+    Star Rail Tool by Scighost v{AppConfig.AppVersion}
+    星穹铁道小工具（仅有命令行版）
+    项目地址和使用方法：https://github.com/Scighost/StarRailTool
+    """);
 
 
 
@@ -105,7 +109,6 @@ var root = new RootCommand();
 }
 #endregion
 
-root.Invoke(args);
 
 
 

@@ -231,7 +231,7 @@ public class DatabaseService
             Time  TEXT NOT NULL
         );
 
-        PRAGMA USER_VERSION =1;
+        PRAGMA USER_VERSION = 1;
         COMMIT TRANSACTION;
         """;
 
