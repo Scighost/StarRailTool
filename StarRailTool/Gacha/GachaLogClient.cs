@@ -165,7 +165,7 @@ public class GachaLogClient
             }
             if (!string.IsNullOrWhiteSpace(Language))
             {
-                gachaUrl = Regex.Replace(gachaUrl, @"&lang=[^&]+", Language);
+                gachaUrl = Regex.Replace(gachaUrl, @"&lang=[^&]+", $"&lang={Language}");
             }
             return gachaUrl;
         }
@@ -179,7 +179,7 @@ public class GachaLogClient
             gachaUrl = Regex.Replace(gachaUrl, @"&end_id=\d", "");
             if (!string.IsNullOrWhiteSpace(Language))
             {
-                gachaUrl = Regex.Replace(gachaUrl, @"&lang=[^&]+", Language);
+                gachaUrl = Regex.Replace(gachaUrl, @"&lang=[^&]+", $"&lang={Language}");
             }
             return gachaUrl;
         }
