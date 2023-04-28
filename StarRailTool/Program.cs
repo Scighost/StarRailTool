@@ -83,7 +83,7 @@ root.Invoke(args);
 
 
 
-await root.InvokeAsync(args);
+var result = await root.InvokeAsync(args);
 
 
 AppConfig.Instance.Save(Path.Combine(AppContext.BaseDirectory, "Config.json"));
@@ -97,4 +97,9 @@ if (checkUpdate)
 }
 
 #endif
+
+if (result == 0)
+{
+    DatabaseService.Instance.AutoBackupDatabase();
+}
 

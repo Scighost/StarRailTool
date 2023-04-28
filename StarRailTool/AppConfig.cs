@@ -15,13 +15,20 @@ internal class AppConfig
 
 
 
-    public string InstallPath_CN { get; set; }
+    public string InstallPath_CN { get; set; } = "";
 
 
-    public string InstallPath_OS { get; set; }
+    public string InstallPath_OS { get; set; } = "";
 
 
+    public bool EnableAutoBackupDatabase { get; set; } = true;
 
+
+    public int BackupIntervalInDays { get; set; } = 21;
+
+
+    [JsonExtensionData]
+    public Dictionary<string, JsonElement>? ExtensionData { get; set; }
 
 
     public static AppConfig Load(string path)
