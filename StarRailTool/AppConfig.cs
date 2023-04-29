@@ -54,7 +54,7 @@ internal class AppConfig
     public Dictionary<string, JsonElement>? ExtensionData { get; set; }
 
 
-    public static AppConfig Load(string path)
+    public static void Load(string path)
     {
         try
         {
@@ -64,28 +64,20 @@ internal class AppConfig
                 var str = File.ReadAllText(path);
                 config = JsonSerializer.Deserialize<AppConfig>(str);
             }
-            return config ??= new AppConfig();
+            if (config is null)
+            {
+                config = new AppConfig();
+                var str = JsonSerializer.Serialize(config, JsonSerializerOptions);
+                File.WriteAllText(path, str);
+            }
+            Instance = config ??= new AppConfig();
         }
         catch (Exception ex)
         {
             Logger.Warn($"无法解析配置文件 {path}：{ex.Message}");
-            return new AppConfig();
-        }
-    }
-
-
-
-
-    public void Save(string path)
-    {
-        try
-        {
-            var str = JsonSerializer.Serialize(this, JsonSerializerOptions);
+            Instance = new AppConfig();
+            var str = JsonSerializer.Serialize(Instance, JsonSerializerOptions);
             File.WriteAllText(path, str);
-        }
-        catch (Exception ex)
-        {
-            Logger.Warn($"保存配置文件 {path} 出错：{ex.Message}");
         }
     }
 

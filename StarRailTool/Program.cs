@@ -2,7 +2,7 @@
 using StarRailTool.Gacha;
 using System.CommandLine;
 
-AppConfig.Instance = AppConfig.Load(Path.Combine(AppContext.BaseDirectory, "Config.json"));
+AppConfig.Load(Path.Combine(AppContext.BaseDirectory, "Config.json"));
 
 
 bool checkUpdate = true;
@@ -114,8 +114,6 @@ var root = new RootCommand($"""
 
 var result = await root.InvokeAsync(args);
 
-
-AppConfig.Instance.Save(Path.Combine(AppContext.BaseDirectory, "Config.json"));
 
 
 #if !DEBUG
