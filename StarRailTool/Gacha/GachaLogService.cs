@@ -188,15 +188,19 @@ internal class GachaLogService
                             continue;
                         }
                         var cols = new List<object> { ((GachaType)type).ToDescription() };
-                        var g = con.QueryFirstOrDefault<int>("""
+                        var g_5 = con.QueryFirstOrDefault<int>("""
                             SELECT COUNT(*) FROM GachaLogItem WHERE Uid = @uid AND GachaType = @type AND
                             Id > (SELECT IFNULL(MAX(Id), 0) FROM GachaLogItem WHERE Uid = @uid AND GachaType = @type AND RankType = 5);
                             """, obj);
-                        cols.Add($"{c} ({g})");
+                        var g_4 = con.QueryFirstOrDefault<int>("""
+                            SELECT COUNT(*) FROM GachaLogItem WHERE Uid = @uid AND GachaType = @type AND
+                            Id > (SELECT IFNULL(MAX(Id), 0) FROM GachaLogItem WHERE Uid = @uid AND GachaType = @type AND RankType = 4);
+                            """, obj);
+                        cols.Add($"{c} ({g_5}-{g_4})");
                         var c_5 = con.QueryFirstOrDefault<int>("SELECT COUNT(*) FROM GachaLogItem WHERE Uid = @uid AND GachaType = @type AND RankType = 5;", obj);
                         var c_4 = con.QueryFirstOrDefault<int>("SELECT COUNT(*) FROM GachaLogItem WHERE Uid = @uid AND GachaType = @type AND RankType = 4;", obj);
-                        cols.Add($"{c_5} ({(double)c_5 / c:P2})");
-                        cols.Add($"{c_4} ({(double)c_4 / c:P2})");
+                        cols.Add($"{c_5} ({(double)c_5 / (c - g_5):P3})");
+                        cols.Add($"{c_4} ({(double)c_4 / (c - g_4):P3})");
                         rows.Add(cols);
                     }
                     ConsoleTableBuilder.From(rows).WithCharMapDefinition(FramePipDefinition).ExportAndWriteLine();
@@ -244,11 +248,15 @@ internal class GachaLogService
         {
             var obj = new { uid, type };
             var c = con.QueryFirstOrDefault<int>("SELECT COUNT(*) FROM GachaLogItem WHERE Uid = @uid AND GachaType = @type;", obj);
-            var g = con.QueryFirstOrDefault<int>("""
+            var g_5 = con.QueryFirstOrDefault<int>("""
                             SELECT COUNT(*) FROM GachaLogItem WHERE Uid = @uid AND GachaType = @type AND
                             Id > (SELECT IFNULL(MAX(Id), 0) FROM GachaLogItem WHERE Uid = @uid AND GachaType = @type AND RankType = 5);
                             """, obj);
-            cols.Add($"{c} ({g})");
+            var g_4 = con.QueryFirstOrDefault<int>("""
+                            SELECT COUNT(*) FROM GachaLogItem WHERE Uid = @uid AND GachaType = @type AND
+                            Id > (SELECT IFNULL(MAX(Id), 0) FROM GachaLogItem WHERE Uid = @uid AND GachaType = @type AND RankType = 4);
+                            """, obj);
+            cols.Add($"{c} ({g_5}-{g_4})");
         }
         var time = con.QueryFirstOrDefault<DateTime>("SELECT Time FROM GachaLogUrl WHERE Uid = @uid LIMIT 1;", new { uid });
         cols.Add(time.ToString("yyyy-MM-dd HH:mm:ss"));
