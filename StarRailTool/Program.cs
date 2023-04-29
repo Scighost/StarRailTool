@@ -6,7 +6,7 @@ using System.CommandLine.Parsing;
 
 if (args.FirstOrDefault() != "complete")
 {
-    AppConfig.Load(Path.Combine(AppContext.BaseDirectory, "Config.json"));
+    AppConfig.Load(Path.Combine(AppConfig.ConfigDirectory, "Config.json"));
 }
 
 
@@ -21,8 +21,16 @@ var desc = $"""
     项目地址和使用方法：https://github.com/Scighost/StarRailTool
     """;
 
+#if DOTNET_TOOL
+desc = $"""
+    {desc}
+    数据文件夹：{AppConfig.ConfigDirectory}
+    """;
+#endif
+
 var root = new RootCommand(desc);
 
+#if !DOTNET_TOOL
 root.SetHandler(() =>
 {
     Console.WriteLine(desc);
@@ -31,6 +39,7 @@ root.SetHandler(() =>
     Console.WriteLine("按回车键退出...");
     Console.ReadLine();
 });
+#endif
 
 
 

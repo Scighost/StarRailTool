@@ -27,7 +27,7 @@ public class DatabaseService
     {
         if (string.IsNullOrWhiteSpace(databasePath))
         {
-            _databasePath = Path.Combine(AppContext.BaseDirectory, "Database.db");
+            _databasePath = Path.Combine(AppConfig.ConfigDirectory, "Database.db");
         }
         else
         {
@@ -77,7 +77,7 @@ public class DatabaseService
                 GetValue<string>("AutoBackupDatabase", out var lastTime);
                 if ((DateTime.Now - lastTime).TotalDays > interval)
                 {
-                    var dir = Path.Combine(AppContext.BaseDirectory, "Backup");
+                    var dir = Path.Combine(AppConfig.ConfigDirectory, "Backup");
                     Directory.CreateDirectory(dir);
                     var file = Path.Combine(dir, $"Database_{DateTime.Now:yyyyMMdd}.db");
                     using var backupCon = new SqliteConnection($"DataSource={file};");

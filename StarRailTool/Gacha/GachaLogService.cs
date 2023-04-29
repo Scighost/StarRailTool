@@ -396,7 +396,7 @@ internal class GachaLogService
                 {
                     if (string.IsNullOrWhiteSpace(output))
                     {
-                        output = Path.Combine(AppContext.BaseDirectory, "Export");
+                        output = Path.Combine(AppConfig.ConfigDirectory, "Export");
                     }
                     output = Path.GetFullPath(output);
                     Directory.CreateDirectory(output);
@@ -430,7 +430,7 @@ internal class GachaLogService
                     if (string.IsNullOrWhiteSpace(output))
                     {
                         output = null!;
-                        dir = Path.Combine(AppContext.BaseDirectory, "Export");
+                        dir = Path.Combine(AppConfig.ConfigDirectory, "Export");
                     }
                     else
                     {

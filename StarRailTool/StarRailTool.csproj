@@ -8,7 +8,7 @@
 		<AssemblyName>srtool</AssemblyName>
 	</PropertyGroup>
 
-	<PropertyGroup Condition="$(Configuration) == 'Release'">
+	<PropertyGroup Condition="'$(Configuration)|$(PackAsTool)' == 'Release|false'">
 		<Platform>x64</Platform>
 		<RuntimeIdentifier>win10-x64</RuntimeIdentifier>
 		<DebugType>embedded</DebugType>
@@ -16,6 +16,17 @@
 		<TrimMode>partial</TrimMode>
 		<PublishSingleFile>true</PublishSingleFile>
 		<IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
+	</PropertyGroup>
+
+	<PropertyGroup Condition="$(PackAsTool) == 'true'">
+		<PackageId>StarRailTool</PackageId>
+		<Authors>Scighost</Authors>
+		<Description>星穹铁道小工具</Description>
+		<PackageProjectUrl>https://github.com/Scighost/StarRailTool</PackageProjectUrl>
+		<RepositoryUrl>https://github.com/Scighost/StarRailTool</RepositoryUrl>
+		<PackageTags>StarRail</PackageTags>
+		<ToolCommandName>srtool</ToolCommandName>
+		<DefineConstants>DOTNET_TOOL</DefineConstants>
 	</PropertyGroup>
 
 	<ItemGroup>

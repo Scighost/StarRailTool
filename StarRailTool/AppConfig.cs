@@ -19,6 +19,11 @@ internal class AppConfig
     public static string? AppVersion { get; private set; }
 
 
+    [JsonIgnore]
+    public static string ConfigDirectory { get; private set; }
+
+
+
     static AppConfig()
     {
         try
@@ -28,6 +33,12 @@ internal class AppConfig
             {
                 AppVersion = FileVersionInfo.GetVersionInfo(file).FileVersion;
             }
+#if DOTNET_TOOL
+            ConfigDirectory = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".srtool");
+            Directory.CreateDirectory(ConfigDirectory);
+#else
+            ConfigDirectory = AppContext.BaseDirectory;
+#endif
         }
         catch { }
     }
