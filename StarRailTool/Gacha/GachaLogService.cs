@@ -557,4 +557,17 @@ internal class GachaLogService
 
 
 
+    public IEnumerable<string> GetUidCompletions(string uid)
+    {
+        try
+        {
+            using var con = DatabaseService.Instance.CreateConnection();
+            return con.Query<string>("SELECT Uid FROM GachaLogUrl WHERE Uid LIKE @key;", new { key = uid + "%" });
+        }
+        catch
+        {
+            return new List<string>();
+        }
+    }
+
 }
