@@ -97,6 +97,10 @@ public class DatabaseService
 
     private class KVT
     {
+
+        public KVT() { }
+
+
         public KVT(string key, string value, DateTime time)
         {
             Key = key;
