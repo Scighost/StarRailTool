@@ -8,7 +8,7 @@
 		<AssemblyName>srtool</AssemblyName>
 	</PropertyGroup>
 
-	<PropertyGroup Condition="'$(Configuration)|$(PackAsTool)' == 'Release|false'">
+	<PropertyGroup Condition="'$(Configuration)|$(PackAsTool)' == 'Release|'">
 		<Platform>x64</Platform>
 		<RuntimeIdentifier>win10-x64</RuntimeIdentifier>
 		<DebugType>embedded</DebugType>
