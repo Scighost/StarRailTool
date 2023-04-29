@@ -5,14 +5,27 @@ using System.CommandLine;
 AppConfig.Load(Path.Combine(AppContext.BaseDirectory, "Config.json"));
 
 
+#pragma warning disable CS0219 // 变量已被赋值，但从未使用过它的值
 bool checkUpdate = true;
+#pragma warning restore CS0219 // 变量已被赋值，但从未使用过它的值
 
-var root = new RootCommand($"""
+
+var desc = $"""
     Star Rail Tool by Scighost v{AppConfig.AppVersion}
     星穹铁道小工具（仅有命令行版）
     项目地址和使用方法：https://github.com/Scighost/StarRailTool
-    """);
+    """;
 
+var root = new RootCommand(desc);
+
+root.SetHandler(() =>
+{
+    Console.WriteLine(desc);
+    Console.WriteLine();
+    Console.WriteLine(@"输入 .\srtool.exe -h 查看帮助");
+    Console.WriteLine("按回车键退出...");
+    Console.ReadLine();
+});
 
 
 #region gacha
@@ -65,32 +78,22 @@ var root = new RootCommand($"""
 
 
 
-}
-#endregion
-
-
-
-
-
-#region export
-{
-
-    var export = new Command("export", "导出数据");
-    root.AddCommand(export);
-
     // 导出抽卡记录
-    var export_gacha = new Command("gacha", "导出抽卡记录");
-    var export_gacha_uid = new Argument<int>("uid", () => 0, "导出指定 uid 的抽卡记录");
-    var export_gacha_all = new Option<bool>("-all", "导出所有 uid 的抽卡记录");
-    var export_gacha_output = new Option<string>("-output", "导出的文件名称或文件夹名称");
-    var export_gacha_format = new Option<string>("-format", () => "excel", "导出格式，支持 Json(.json) 文件和 Excel(.xlsx) 文件").FromAmong("json", "excel");
+    var gacha_export = new Command("export", "导出抽卡记录");
+    var gacha_export_uid = new Argument<int>("uid", () => 0, "导出指定 uid 的抽卡记录");
+    var gacha_export_all = new Option<bool>("-all", "导出所有 uid 的抽卡记录");
+    var gacha_export_output = new Option<string>("-output", "导出的文件名称或文件夹名称");
+    var gacha_export_format = new Option<string>("-format", () => "excel", "导出格式，支持 Json(.json) 文件和 Excel(.xlsx) 文件").FromAmong("json", "excel");
 
-    export_gacha.AddArgument(export_gacha_uid);
-    export_gacha.AddOption(export_gacha_all);
-    export_gacha.AddOption(export_gacha_output);
-    export_gacha.AddOption(export_gacha_format);
-    export_gacha.SetHandler(GachaLogService.Instance.ExportGachaLog, export_gacha_uid, export_gacha_all, export_gacha_output, export_gacha_format);
-    export.AddCommand(export_gacha);
+    gacha_export.AddArgument(gacha_export_uid);
+    gacha_export.AddOption(gacha_export_all);
+    gacha_export.AddOption(gacha_export_output);
+    gacha_export.AddOption(gacha_export_format);
+    gacha_export.SetHandler(GachaLogService.Instance.ExportGachaLog, gacha_export_uid, gacha_export_all, gacha_export_output, gacha_export_format);
+    gacha.AddCommand(gacha_export);
+
+
+
 
 }
 #endregion
