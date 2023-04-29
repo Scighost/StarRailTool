@@ -162,7 +162,7 @@ var result = await root.InvokeAsync(args);
 
 #if !DEBUG
 
-if (checkUpdate && AppConfig.Instance.AutoCheckUpdate && args.FirstOrDefault() != "complete")
+if (checkUpdate && (AppConfig.Instance?.AutoCheckUpdate ?? false) && args.FirstOrDefault() != "complete")
 {
     await GithubService.CheckUpdateAsync();
 }
