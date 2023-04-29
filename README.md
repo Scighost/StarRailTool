@@ -1,4 +1,6 @@
-# 星穹铁道小工具（仅有命令行版）
+# 星穹铁道小工具
+
+> 仅有命令行版
 
 ![又不是不能用](img/ybsbny.jpg)
 
@@ -22,7 +24,7 @@
 
 ### 抽卡记录
 
-首先明确一个概率，游戏中的这个界面其实是一个网页，我把它称作**抽卡记录页面**，这个页面的网址链接会被缓存在 `StarRail_Data\webCaches\Cache\Cache_Data\data_2` 这个文件中，我把这个链接称作**抽卡记录网址**。
+首先明确一个概念，游戏中的这个界面其实是一个网页，我把它称作**抽卡记录页面**，这个页面的网址链接会被缓存在 `StarRail_Data\webCaches\Cache\Cache_Data\data_2` 这个文件中，我把这个链接称作**抽卡记录网址**。
 
 <details>
 <summary>抽卡记录页面</summary>
@@ -121,8 +123,8 @@
 | InstallPath_CN | string | 国服游戏本体文件夹 |
 | InstallPath_OS | string | 国际服游戏本体文件夹 |
 | EnableAutoBackupDatabase | bool | 开启自动备份数据库 |
-| BackupIntervalInDays | int | 自动备份数据库间隔天数 |
-| AutoCheckUpdate | bool | 自动检查更新 |
+| BackupIntervalInDays | int | 自动备份数据库间隔天数，默认 21 |
+| AutoCheckUpdate | bool | 自动检查更新，关闭可加快程序退出 |
 
 ## 一些吐槽
 
