@@ -10,7 +10,18 @@
 - [ ] 开拓月历
 - [ ] 忘却之庭
 
-## 使用方法
+
+## 安装
+
+> 以下安装方法二选一
+
+### dotnet tool
+
+- 安装 .NET 7 SDK
+- 运行命令 `dotnet tool install StarRailTool -g`
+- 使用工具 `srtool`
+
+### Github Release
 
 在 [Releases](https://github.com/Scighost/StarRailTool/releases) 下载并解压后，进入到含有 `srtool.exe` 的文件夹，在空白处使用右键菜单打开**终端**，输入 `.\srtool.exe -h` 并按下回车。这是你应该看到类似下图这样的结果，同时文件夹中多出了两个文件 `Config.json` 和 `Database.db`。
 
@@ -21,6 +32,28 @@
 
 </details>
 
+## 使用方法
+
+**强烈推荐启用自动补全功能，这能够帮你避免繁琐的输入命令和 uid 的过程。**
+
+### 自动补全
+
+> 自动补全功能仅支持 PowerShell
+
+如果你从 Github Release 下载的工具，需要把 `srtool.exe` 所在的文件夹路径添加到环境变量 `Path` 中，从 dotnet tool 安装的版本无需此操作。添加环境变量后，可以使用 `srtool` 代替 `.\srtool.exe`。
+
+然后启动 PowerShell，输入 `notepad $profile` 然后按下回车，在弹出的记事本窗口末尾添加以下内容（没有文件则创建新文件）。
+
+``` PowerShell
+Register-ArgumentCompleter -Native -CommandName srtool -ScriptBlock {
+   param($commandName, $wordToComplete, $cursorPosition)
+      srtool complete "$wordToComplete" --position $cursorPosition | ForEach-Object {
+         [System.Management.Automation.CompletionResult]::new($_, $_, 'ParameterValue', $_)
+   }
+};
+```
+
+保存文件然后重启 PowerShell，现在你可以愉快地使用 `Tab 键` 补全命令和 uid 了。
 
 ### 抽卡记录
 
