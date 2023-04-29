@@ -71,7 +71,7 @@ internal abstract class GithubService
                             Console.WriteLine($"有新版本 v{release.TagName}:{release.Name}");
                             Console.WriteLine(release.HtmlUrl);
 #if DOTNET_TOOL
-                            Console.WriteLine("使用命令 'dotnet tool update srtool -g' 更新");
+                            Console.WriteLine("使用命令 'dotnet tool update StarRailTool -g' 更新");
 #endif
                             Console.ForegroundColor = ConsoleColor.White;
                         }
