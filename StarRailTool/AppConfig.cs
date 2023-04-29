@@ -1,4 +1,4 @@
-﻿using System.Diagnostics;
+﻿using System.Reflection;
 using System.Text.Encodings.Web;
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -28,11 +28,7 @@ internal class AppConfig
     {
         try
         {
-            var file = Process.GetCurrentProcess().MainModule?.FileName;
-            if (File.Exists(file))
-            {
-                AppVersion = FileVersionInfo.GetVersionInfo(file).FileVersion;
-            }
+            AppVersion = typeof(AppConfig).Assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion;
 #if DOTNET_TOOL
             ConfigDirectory = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".srtool");
             Directory.CreateDirectory(ConfigDirectory);
