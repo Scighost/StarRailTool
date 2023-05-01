@@ -1,4 +1,5 @@
-﻿using System.Reflection;
+﻿using Microsoft.Win32;
+using System.Reflection;
 using System.Text.Encodings.Web;
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -30,8 +31,16 @@ internal class AppConfig
         {
             AppVersion = typeof(AppConfig).Assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion;
 #if DOTNET_TOOL
-            ConfigDirectory = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".srtool");
-            Directory.CreateDirectory(ConfigDirectory);
+            var configDir = Registry.GetValue(@"HKEY_CURRENT_USER\Software\StarRailTool", "ConfigDirectory", null) as string;
+            if (Directory.Exists(configDir))
+            {
+                ConfigDirectory = configDir;
+            }
+            else
+            {
+                ConfigDirectory = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".srtool");
+                Directory.CreateDirectory(ConfigDirectory);
+            }
 #else
             ConfigDirectory = AppContext.BaseDirectory;
 #endif
