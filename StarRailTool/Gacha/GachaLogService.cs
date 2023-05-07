@@ -5,6 +5,9 @@ using MiniExcelLibs.OpenXml;
 using System.Data;
 using System.Text.Json;
 
+
+using OfficeOpenXml;
+using System.Drawing;
 namespace StarRailTool.Gacha;
 
 internal class GachaLogService
@@ -496,7 +499,8 @@ internal class GachaLogService
         table1.Columns.Add("count", typeof(string));
         foreach (var item in list)
         {
-            table1.Rows.Add(item.Uid.ToString(),
+            table1.Rows.Add(
+                             item.Uid.ToString(),
                             item.Id.ToString(),
                             item.Time.ToString("yyyy-MM-dd HH:mm:ss"),
                             item.Name,
@@ -513,27 +517,31 @@ internal class GachaLogService
         foreach (var type in new int[] { 1, 2, 11, 12 })
         {
             var table = new DataTable(((GachaType)type).ToDescription());
-            table.Columns.Add("Uid", typeof(string));
-            table.Columns.Add("Id", typeof(string));
+            //table.Columns.Add("Uid", typeof(string));
+            //table.Columns.Add("Id", typeof(string));
             table.Columns.Add("时间", typeof(string));
             table.Columns.Add("名称", typeof(string));
             table.Columns.Add("物品类型", typeof(string));
             table.Columns.Add("稀有度", typeof(string));
-            table.Columns.Add("跃迁类型", typeof(string));
-            table.Columns.Add("保底内排序", typeof(string));
+            // table.Columns.Add("跃迁类型", typeof(string));
+            table.Columns.Add("保底内排序", typeof(int));
+            table.Columns.Add("总次数", typeof(int));
             var l = list.Where(x => x.GachaType == (GachaType)type).ToList();
+            int all = 0;
             int index = 0;
             foreach (var item in l)
             {
+                all++;
                 index++;
-                table.Rows.Add(item.Uid.ToString(),
-                            item.Id.ToString(),
+                table.Rows.Add(
                             item.Time.ToString("yyyy-MM-dd HH:mm:ss"),
                             item.Name,
                             item.ItemType,
                             item.RankType.ToString(),
-                            ((int)item.GachaType).ToString(),
-                            index.ToString());
+                            //((int)item.GachaType).ToString(),
+                            index.ToString(),
+                            all.ToString()
+                            );
                 if (item.RankType == 5)
                 {
                     index = 0;
@@ -541,13 +549,51 @@ internal class GachaLogService
             }
             sheets.Tables.Add(table);
         }
+        List<string> sheetTitles = new List<string>();
+        foreach (DataColumn column in sheets.Tables[1].Columns)
+        {
+            sheetTitles.Add(column.ColumnName);
+        }
 
-        MiniExcel.SaveAs(output, sheets, configuration: new OpenXmlConfiguration { TableStyles = TableStyles.None, });
+        ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
+        ExcelPackage excel = new ExcelPackage();
+        //数据写入excel中，并设置字体、自动调整列宽
+        foreach (DataTable table in sheets.Tables)
+        {
+            ExcelWorksheet sheet = excel.Workbook.Worksheets.Add(table.TableName);
+            sheet.Cells.Style.Font.Name = "微软雅黑";
+            sheet.Cells["A1"].LoadFromDataTable(table, true);
+            sheet.Cells.AutoFitColumns();
+        }
+
+        //遍历第2、3、4、5个sheet，
+        for (int sheetCount = 1; sheetCount < sheets.Tables.Count; sheetCount++)
+        {
+            ExcelWorksheet sheet = excel.Workbook.Worksheets[sheetCount];
+ 
+            int sheetRows = sheet.Dimension.Rows;
+            int itemStarPosition = sheetTitles.IndexOf("稀有度") + 1;
+            //遍历每一行
+            for (int j = 2; j <= sheetRows; j++)
+            {
+                string itemStar = sheet.Cells[j, itemStarPosition].Value.ToString();
+                if (itemStar == "4")
+                {
+                    //换色加粗
+                    sheet.Row(j).Style.Font.Color.SetColor(Color.Purple);
+                    sheet.Row(j).Style.Font.Bold = true;
+                }
+                else if (itemStar == "5")
+                {
+                    sheet.Row(j).Style.Font.Color.SetColor(Color.Orange);
+                    sheet.Row(j).Style.Font.Bold = true;
+                }
+            }
+        }
+
+        //保存
+        excel.SaveAs(new FileInfo(output));
     }
-
-
-
-
 
 
     private class GachaLogItemEx : GachaLogItem

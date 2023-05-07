@@ -1,7 +1,12 @@
 {
   "profiles": {
-    "SrTool": {
-      "commandName": "Project"
+    "get": {
+      "commandName": "Project",
+      "commandLineArgs": "gacha get"
+    },
+    "export": {
+      "commandName": "Project",
+      "commandLineArgs": "gacha export 102572035 -output C:\\Users\\25389\\Desktop\\102572035.xlsx"
     }
   }
 }
