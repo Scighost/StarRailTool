@@ -1,4 +1,9 @@
-# 星穹铁道小工具
+# 去特么的命令行
+
+**本项目停止维护，相关功能移步 [Starward](https://github.com/Scighost/Starward)**
+
+<details>
+<summary>使用方法</summary>
 
 > 仅有命令行版
 
@@ -212,3 +217,5 @@ Register-ArgumentCompleter -Native -CommandName srtool -ScriptBlock {
 ```
 
 真就是 **我知道有问题，但是我会在下个游戏中优化**
+
+</details>
